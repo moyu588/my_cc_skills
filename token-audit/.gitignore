@@ -1,0 +1,10 @@
+# 快照文件是用户数据，不提交到仓库
+snapshots/*.json
+!snapshots/.gitkeep
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

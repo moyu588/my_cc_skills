@@ -1,0 +1,51 @@
+{
+  "_comment": "LLM Wiki 知识库场景 — 基于 Obsidian + Claude Code + OpenWolf 构建的 Wiki 项目",
+  "name": "LLM Wiki 知识库",
+  "detect": {
+    "dirs": ["wiki/", "raw/", "assets/"],
+    "files": ["CLAUDE.md", "HomePage.md"],
+    "keywords_in_claude_md": ["wiki", "ingest", "obsidian", "知识库"]
+  },
+  "anatomy_healthy": {
+    "max_lines": 400,
+    "max_files": 250,
+    "max_size_kb": 20
+  },
+  "sessions_healthy": {
+    "max_count": 30,
+    "max_age_days": 30,
+    "max_total_mb": 2
+  },
+  "dirs_should_track": [
+    "wiki/",
+    ".claude/skills/",
+    ".claude/rules/",
+    "assets/"
+  ],
+  "dirs_should_not_track": [
+    ".obsidian/",
+    ".claudian/",
+    "raw/09-archive/",
+    "resources/",
+    "venv/",
+    ".venv/",
+    "env/",
+    "template/"
+  ],
+  "expected_excludes": [
+    "resources",
+    ".obsidian",
+    ".claudian",
+    "09-archive",
+    "venv",
+    ".venv",
+    "env"
+  ],
+  "waste_sources_priority": [
+    { "type": "anatomy_pollution", "description": "第三方插件/会话文件/归档文件被 anatomy 追踪" },
+    { "type": "stale_sessions", "description": "超过 30 天的会话文件未清理" },
+    { "type": "conflicted_files", "description": "同步冲突文件残留" },
+    { "type": "claude_md_bloat", "description": "CLAUDE.md 体积过大" },
+    { "type": "ineffective_excludes", "description": "排除规则声明了但实际未生效" }
+  ]
+}

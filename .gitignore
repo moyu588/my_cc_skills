@@ -1,0 +1,77 @@
+# =============================
+# Claude Code 配置文件
+# =============================
+.claude/
+.claude_files/
+.clauderc
+claude.json
+claude_settings.json
+CLAUDE.md
+
+# Claude Code 项目级配置
+**/.claude/
+**/CLAUDE.md
+
+# =============================
+# API Key / 密钥 / 环境变量
+# =============================
+.env
+.env.*
+.env.local
+.env.production
+*.key
+*.pem
+*.p12
+*.pfx
+secrets.json
+secrets.yaml
+secrets.yml
+config.local.*
+
+# =============================
+# Windows 系统文件
+# =============================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# =============================
+# Linux / macOS 系统文件
+# =============================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# =============================
+# 编辑器 / IDE
+# =============================
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+.cursor/
+
+# =============================
+# 常见语言构建产物（按需保留）
+# =============================
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+node_modules/
+.npm/
+*.log
