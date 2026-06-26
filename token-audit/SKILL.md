@@ -1,16 +1,18 @@
-# token-audit Skill
+---
+name: token-audit
+description: Token 浪费分析与自动修复——扫描 anatomy.md 膨胀、会话文件堆积、排除规则失效、冲突文件等浪费源。支持 quick/full/trend 三种模式，场景感知（LLM Wiki / 代码开发 / 通用）。当用户说"token 浪费""token 审计""分析会话""为什么 token 贵""检查 token 效率""最近用量""API 费用"或 /token-audit 命令时使用此技能。
+user-invocable: true
+---
 
-> Token 浪费分析与自动修复。支持自然语言触发，场景感知（LLM Wiki / 代码开发 / 通用）。
+# token-audit：Token 浪费分析
+
+> 扫描并量化 token 浪费来源，支持场景感知（LLM Wiki / 代码开发 / 通用），三种分析深度。
+
+**依赖**：Node.js（当前 v22.14.0 ✅），`openwolf` CLI。
 
 ## 触发方式
 
-自然语言，任意一个即可：
-- "token 浪费" / "token 消耗" / "token 分析" / "token 审计"
-- "为什么 token 这么贵" / "分析会话日志" / "检查 token 效率"
-- "最近 token 用量" / "API 费用"
-- 当用户说 "帮我看看浪费在哪" 或类似表达时
-
-Slash command `/token-audit` 默认使用 **quick** 模式。
+`/token-audit` 默认 **quick** 模式。自然语言触发词："token 浪费/审计/分析""为什么 token 贵""检查效率""最近用量""API 费用"。
 
 ## 工作流
 
@@ -18,11 +20,11 @@ Slash command `/token-audit` 默认使用 **quick** 模式。
 
 根据用户措辞判断分析深度（`/token-audit` 无附加说明时默认 quick）：
 
-| 用户说 | 模式 | 特征 |
-|--------|------|------|
+| 用户说                      | 模式        | 特征                           |
+| ------------------------ | --------- | ---------------------------- |
 | "扫一眼" / "快速检查" / "有没有问题" | **quick** | `--quick` 标志，跳过慢速扫描，30 秒内出结论 |
-| "深度分析" / "完整报告" / "审计" | **full** | 完整采集 + 对比快照 + 生成报告 |
-| "最近越来越贵" / "和上周比" / "趋势" | **trend** | full 模式 + 加载历史快照做对比 |
+| "深度分析" / "完整报告" / "审计"   | **full**  | 完整采集 + 对比快照 + 生成报告           |
+| "最近越来越贵" / "和上周比" / "趋势" | **trend** | full 模式 + 加载历史快照做对比          |
 
 ### Step 2: 场景嗅探
 
@@ -46,23 +48,28 @@ node .claude/skills/token-audit/token-audit.mjs . [--quick]
 将 JSON 数据与 profile 期望值对比，按照 `waste_sources_priority` 顺序逐项检查：
 
 1. **anatomy.md 膨胀检测**
+   
    - 对比 `max_lines` / `max_files` / `max_size_kb` 阈值
    - 从 `top_level_dirs` 找出 `should_not_track` 中 `tracked > 0` 的目录 → 污染源
    - 从 `top_level_dirs` 找出 `should_track` 中 `tracked_pct < 50` 的目录 → 遗漏风险
 
 2. **会话文件膨胀**
+   
    - 对比 `sessions_healthy` 阈值
    - 列出 `age_days > max_age_days` 的过期会话
    - 计算可释放磁盘空间
 
 3. **排除规则有效性**
+   
    - 检查 `ineffective_excludes` → 已声明但未生效的规则
    - 检查 `expected_excludes` 中哪些尚未配置 → 推荐追加
 
 4. **冲突文件**
+   
    - `conflicted_files.count > 0` → 建议清理
 
 5. **CLAUDE.md 膨胀**
+   
    - `est_tokens_per_session > 3000` → 建议精简
 
 ### Step 5: Token 对比
@@ -76,6 +83,7 @@ node .claude/skills/token-audit/token-audit.mjs . [--quick]
 ### Step 6: 输出与修复
 
 #### Quick 模式输出
+
 ```
 🔍 快速扫描 (<project>) — <scenario> 场景
 ✅ anatomy.md: <lines> 行 / <files> 文件（阈值 <threshold>）
@@ -85,7 +93,9 @@ node .claude/skills/token-audit/token-audit.mjs . [--quick]
 ```
 
 #### Full 模式输出
+
 完整的 Markdown 报告，包含：
+
 - 浪费点一览表（严重程度排序）
 - 每个浪费点的量化数据 + 根因分析
 - Token 账单（必要 vs 浪费）
@@ -93,7 +103,9 @@ node .claude/skills/token-audit/token-audit.mjs . [--quick]
 - 询问用户是否执行修复
 
 #### 修复执行
+
 用户确认后，执行以下操作：
+
 1. 更新 `.wolf/config.json`（追加 exclude_patterns / 调整参数）
 2. 删除过期会话文件（保留最近 30 天）
 3. 删除冲突副本文件
