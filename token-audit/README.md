@@ -1,8 +1,8 @@
 # token-audit
 
-> 通用 Token 浪费分析工具 — 适用于 **Claude Code + OpenWolf + 第三方 LLM API** 项目栈
+> 通用 Token 浪费分析工具 — 适用于 **Claude Code + 第三方 LLM API** 项目栈
 
-自动扫描 `anatomy.md`、会话日志、配置文件，统计 token 消耗并生成修复方案。
+自动扫描会话日志、CLAUDE.md、冲突文件，统计 token 消耗并生成修复方案。
 
 ## 特性
 
@@ -17,7 +17,6 @@
 ### 前置条件
 
 - Node.js ≥ 18（Claude Code 已自带）
-- OpenWolf 管理的项目（有 `.wolf/config.json`）
 - （可选）Claude Code + Claudian（会话文件在 `.claudian/sessions/`）
 
 ### 安装
@@ -85,27 +84,19 @@ node token-audit.mjs . > report.json
     "platform": "linux",
     "scenario_hints": ["llm-wiki", "claude-code"]
   },
-  "anatomy": {
-    "lines": 775,
-    "size_kb": 35,
-    "entries": 525,
-    "hit_rate_pct": 0,
-    "est_tokens_per_session": 8750
+  "claude_md": {
+    "exists": true,
+    "size_bytes": 12000,
+    "est_tokens_per_session": 3000
   },
   "top_level_dirs": [
-    { "path": "wiki/", "on_disk": 200, "tracked": 150, "tracked_pct": 75 },
-    { "path": ".obsidian/", "on_disk": 45, "tracked": 52, "tracked_pct": 115 }
+    { "path": "wiki/", "on_disk": 200 },
+    { "path": ".obsidian/", "on_disk": 45 }
   ],
   "sessions": {
     "count": 74,
     "total_size_mb": 4.5,
     "over_30days": 62
-  },
-  "config": {
-    "exclude_patterns": {
-      "configured": ["node_modules", ".git", "dist"],
-      "ineffective": [{ "pattern": ".obsidian/plugins", "entries_still_present": 15 }]
-    }
   }
 }
 ```
@@ -126,11 +117,7 @@ node token-audit.mjs . > report.json
 {
   "name": "你的场景名",
   "detect": { "dirs": ["your-dir/"], "files": ["your-file.json"] },
-  "anatomy_healthy": { "max_lines": 400, "max_files": 300, "max_size_kb": 20 },
   "sessions_healthy": { "max_count": 30, "max_age_days": 30, "max_total_mb": 3 },
-  "dirs_should_track": ["src/", "docs/"],
-  "dirs_should_not_track": ["node_modules/", "venv/", "dist/"],
-  "expected_excludes": ["node_modules", "venv", "dist"],
   "waste_sources_priority": [...]
 }
 ```
@@ -159,9 +146,8 @@ token-audit/
                       │
          ┌────────────┼────────────┐
          ▼            ▼            ▼
-    .wolf/       .claudian/    .claude/
-  anatomy.md    sessions/    settings.json
-  config.json               CLAUDE.md
+   .claudian/     CLAUDE.md    .claude/ 等
+   sessions/    (上下文开销)   (冲突文件)
          │            │            │
          └────────────┼────────────┘
                       ▼

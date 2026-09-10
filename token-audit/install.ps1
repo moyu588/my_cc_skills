@@ -8,7 +8,7 @@
 #   powershell -ExecutionPolicy Bypass -File path\to\token-audit\install.ps1 -ProjectRoot C:\path\to\project
 #
 # 前置条件:
-#   Node.js ≥ 18，项目使用 Claude Code + OpenWolf
+#   Node.js ≥ 18，项目使用 Claude Code
 #
 # 安装后 token-audit\ 源目录可安全删除，运行时文件已全部复制到 .claude\skills\token-audit\
 

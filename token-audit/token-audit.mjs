@@ -16,7 +16,7 @@
  */
 
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
-import { join, resolve, relative, basename } from 'node:path';
+import { join, resolve, relative } from 'node:path';
 import { platform } from 'node:os';
 
 // ── 工具函数 ──────────────────────────────────────────────
@@ -66,43 +66,9 @@ function ageDays(filePath) {
   } catch { return 0; }
 }
 
-/** 安全读取 JSON */
-function readJSON(filePath) {
-  try {
-    return JSON.parse(readFileSync(filePath, 'utf-8'));
-  } catch { return null; }
-}
-
 /** 安全读取文本 */
 function readText(filePath) {
   try { return readFileSync(filePath, 'utf-8'); } catch { return null; }
-}
-
-/** anatomy.md 条目数 */
-function countAnatomyEntries(content) {
-  if (!content) return 0;
-  return (content.match(/^- `[^`]+`/gm) || []).length;
-}
-
-/** anatomy.md 按顶级目录分组统计 */
-function anatomyBySection(content) {
-  if (!content) return [];
-  const sections = [];
-  let current = null;
-  for (const line of content.split('\n')) {
-    if (/^## \.\//.test(line)) {
-      if (current) sections.push(current);
-      current = { section: './', files: 0 };
-    } else if (/^## (.+)/.test(line) && !/^## \.\//.test(line)) {
-      if (current) sections.push(current);
-      const m = line.match(/^## (.+)/);
-      current = { section: m[1].trim(), files: 0 };
-    } else if (/^- `/.test(line) && current) {
-      current.files++;
-    }
-  }
-  if (current) sections.push(current);
-  return sections;
 }
 
 /** 检测项目场景提示（从目录名和文件名嗅探） */
@@ -128,30 +94,6 @@ function detectScenarioHints(root) {
 function collect(projectRoot, quickMode = false) {
   const root = resolve(projectRoot || '.');
 
-  // ── anatomy.md 分析 ──
-  const anatomyPath = join(root, '.wolf', 'anatomy.md');
-  const anatomyContent = readText(anatomyPath);
-  const anatomyLines = anatomyContent ? anatomyContent.split('\n').length : 0;
-  const anatomySize = anatomyContent ? Buffer.byteLength(anatomyContent, 'utf-8') : 0;
-  const anatomyFiles = countAnatomyEntries(anatomyContent);
-  const anatomySections = anatomyBySection(anatomyContent);
-
-  // 提取 anatomy.md 头部统计
-  const anatomyMeta = {};
-  if (anatomyContent) {
-    const m = anatomyContent.match(/Files: (\d+) tracked \| Anatomy hits: (\d+) \| Misses: (\d+)/);
-    if (m) {
-      anatomyMeta.files_tracked = parseInt(m[1]);
-      anatomyMeta.hits = parseInt(m[2]);
-      anatomyMeta.misses = parseInt(m[3]);
-      anatomyMeta.hit_rate_pct = anatomyMeta.files_tracked > 0
-        ? Math.round((anatomyMeta.hits / (anatomyMeta.hits + anatomyMeta.misses || 1)) * 100)
-        : 0;
-    }
-  }
-  const lastScannedMatch = anatomyContent ? anatomyContent.match(/Last scanned: (.+)\)/) : null;
-  const lastScanned = lastScannedMatch ? lastScannedMatch[1] : null;
-
   // ── 顶级目录分析 ──
   const topLevelDirs = [];
   if (!quickMode && existsSync(root)) {
@@ -161,46 +103,10 @@ function collect(projectRoot, quickMode = false) {
       if (e.name.startsWith('.git') || e.name === 'node_modules') continue;
       const relPath = e.name + '/';
       const fullPath = join(root, e.name);
-      const onDisk = fileCount(fullPath);
-      // 在 anatomy 中查找该目录的条目数
-      const sectionName = '## ' + relPath;
-      const section = anatomySections.find(s => s.section === relPath || s.section.startsWith(relPath));
-      const tracked = section ? section.files : 0;
-      // 也检查子目录（如 .obsidian/plugins/ 归入 .obsidian/）
-      const subTracked = anatomySections
-        .filter(s => s.section.startsWith(relPath) && s.section !== relPath)
-        .reduce((sum, s) => sum + s.files, 0);
-
       topLevelDirs.push({
         path: relPath,
-        on_disk: onDisk,
-        tracked: tracked + subTracked,
-        tracked_pct: onDisk > 0 ? Math.round(((tracked + subTracked) / onDisk) * 100) : 0
+        on_disk: fileCount(fullPath)
       });
-    }
-  }
-
-  // ── 配置分析 ──
-  const configPath = join(root, '.wolf', 'config.json');
-  const config = readJSON(configPath);
-  const openwolf = config?.openwolf || {};
-  const excludePatterns = openwolf?.anatomy?.exclude_patterns || [];
-  const maxFiles = openwolf?.anatomy?.max_files || null;
-  const maxDescLen = openwolf?.anatomy?.max_description_length || null;
-  const wasteThreshold = openwolf?.token_audit?.waste_threshold_percent || null;
-
-  // 检测可能无效的排除规则（pattern 在 anatomy 中仍有匹配项）
-  const ineffectiveExcludes = [];
-  for (const pattern of excludePatterns) {
-    if (pattern.includes('*')) continue; // glob 模式跳过精确匹配检查
-    let stillPresent = 0;
-    for (const s of anatomySections) {
-      if (s.section.includes(pattern) && s.files > 0) {
-        stillPresent += s.files;
-      }
-    }
-    if (stillPresent > 0) {
-      ineffectiveExcludes.push({ pattern, entries_still_present: stillPresent });
     }
   }
 
@@ -232,13 +138,12 @@ function collect(projectRoot, quickMode = false) {
   const claudeMdSize = claudeMdContent ? Buffer.byteLength(claudeMdContent, 'utf-8') : 0;
 
   // 估算每会话上下文开销（tokens ≈ bytes / 4 for prose）
-  const anatomyTokenEst = Math.round(anatomySize / 4);
   const claudeMdTokenEst = Math.round(claudeMdSize / 4);
 
   // ── 冲突文件检测 ──
   const conflictedFiles = [];
   if (!quickMode) {
-    const searchDirs = ['.obsidian', '.wolf', '.claudian', '.claude'];
+    const searchDirs = ['.obsidian', '.claudian', '.claude'];
     for (const d of searchDirs) {
       const dp = join(root, d);
       if (!existsSync(dp)) continue;
@@ -263,36 +168,12 @@ function collect(projectRoot, quickMode = false) {
       scenario_hints: detectScenarioHints(root),
       quick_mode: quickMode
     },
-    anatomy: {
-      exists: existsSync(anatomyPath),
-      path: relative(root, anatomyPath).replace(/\\/g, '/'),
-      lines: anatomyLines,
-      size_bytes: anatomySize,
-      size_kb: Math.round(anatomySize / 1024),
-      entries: anatomyFiles,
-      sections: quickMode ? [] : anatomySections,
-      last_scanned: lastScanned,
-      hits: anatomyMeta.hits || 0,
-      misses: anatomyMeta.misses || 0,
-      hit_rate_pct: anatomyMeta.hit_rate_pct || 0,
-      est_tokens_per_session: anatomyTokenEst
-    },
     claude_md: {
       exists: existsSync(claudeMdPath),
       size_bytes: claudeMdSize,
       est_tokens_per_session: claudeMdTokenEst
     },
     top_level_dirs: topLevelDirs,
-    config: {
-      max_files: maxFiles,
-      max_description_length: maxDescLen,
-      waste_threshold_pct: wasteThreshold,
-      exclude_patterns: {
-        configured: excludePatterns,
-        count: excludePatterns.length,
-        ineffective: ineffectiveExcludes
-      }
-    },
     sessions: {
       dir: relative(root, sessionsDir).replace(/\\/g, '/'),
       exists: existsSync(sessionsDir),
@@ -313,9 +194,8 @@ function collect(projectRoot, quickMode = false) {
       files: conflictedFiles
     },
     token_breakdown: {
-      anatomy_est_tokens_per_session: anatomyTokenEst,
       claude_md_est_tokens_per_session: claudeMdTokenEst,
-      total_est_tokens_per_session: anatomyTokenEst + claudeMdTokenEst
+      total_est_tokens_per_session: claudeMdTokenEst
     }
   };
 }

@@ -1,6 +1,6 @@
 ---
 name: token-audit
-description: Token 浪费分析与自动修复——扫描 anatomy.md 膨胀、会话文件堆积、排除规则失效、冲突文件等浪费源。支持 quick/full/trend 三种模式，场景感知（LLM Wiki / 代码开发 / 通用）。当用户说"token 浪费""token 审计""分析会话""为什么 token 贵""检查 token 效率""最近用量""API 费用"或 /token-audit 命令时使用此技能。
+description: Token 浪费分析与自动修复——扫描会话文件堆积、CLAUDE.md 膨胀、冲突文件等浪费源。支持 quick/full/trend 三种模式，场景感知（LLM Wiki / 代码开发 / 通用）。当用户说"token 浪费""token 审计""分析会话""为什么 token 贵""检查 token 效率""最近用量""API 费用"或 /token-audit 命令时使用此技能。
 user-invocable: true
 ---
 
@@ -8,7 +8,7 @@ user-invocable: true
 
 > 扫描并量化 token 浪费来源，支持场景感知（LLM Wiki / 代码开发 / 通用），三种分析深度。
 
-**依赖**：Node.js（当前 v22.14.0 ✅），`openwolf` CLI。
+**依赖**：Node.js（当前 v22.14.0 ✅）。
 
 ## 触发方式
 
@@ -47,28 +47,17 @@ node .claude/skills/token-audit/token-audit.mjs . [--quick]
 
 将 JSON 数据与 profile 期望值对比，按照 `waste_sources_priority` 顺序逐项检查：
 
-1. **anatomy.md 膨胀检测**
-   
-   - 对比 `max_lines` / `max_files` / `max_size_kb` 阈值
-   - 从 `top_level_dirs` 找出 `should_not_track` 中 `tracked > 0` 的目录 → 污染源
-   - 从 `top_level_dirs` 找出 `should_track` 中 `tracked_pct < 50` 的目录 → 遗漏风险
-
-2. **会话文件膨胀**
+1. **会话文件膨胀**
    
    - 对比 `sessions_healthy` 阈值
    - 列出 `age_days > max_age_days` 的过期会话
    - 计算可释放磁盘空间
 
-3. **排除规则有效性**
-   
-   - 检查 `ineffective_excludes` → 已声明但未生效的规则
-   - 检查 `expected_excludes` 中哪些尚未配置 → 推荐追加
-
-4. **冲突文件**
+2. **冲突文件**
    
    - `conflicted_files.count > 0` → 建议清理
 
-5. **CLAUDE.md 膨胀**
+3. **CLAUDE.md 膨胀**
    
    - `est_tokens_per_session > 3000` → 建议精简
 
@@ -76,7 +65,7 @@ node .claude/skills/token-audit/token-audit.mjs . [--quick]
 
 将当前 token 消耗与上次快照（如存在）对比：
 
-- `anatomy_est_tokens_per_session` 上涨 >10% → 退化警告
+- `claude_md_est_tokens_per_session` 上涨 >10% → 退化警告
 - `sessions.count` 增长趋势 → 建议清理
 - 输出中只对比 token 数据，不做 API 价格换算（价格实时变动，不做硬编码）
 
@@ -86,7 +75,7 @@ node .claude/skills/token-audit/token-audit.mjs . [--quick]
 
 ```
 🔍 快速扫描 (<project>) — <scenario> 场景
-✅ anatomy.md: <lines> 行 / <files> 文件（阈值 <threshold>）
+✅ CLAUDE.md: <size_kb> KB（预估 ~<tokens> tok/会话）
 ⚠️ 会话文件: <count> 个，<over> 个过期
 🔴 <N> 个问题 | 预估每会话浪费 ~<tokens> tok
 要深度分析吗？
@@ -106,12 +95,10 @@ node .claude/skills/token-audit/token-audit.mjs . [--quick]
 
 用户确认后，执行以下操作：
 
-1. 更新 `.wolf/config.json`（追加 exclude_patterns / 调整参数）
-2. 删除过期会话文件（保留最近 30 天）
-3. 删除冲突副本文件
-4. 运行 `openwolf scan` 重建 anatomy.md
-5. 保存快照到 `.claude/skills/token-audit/snapshots/YYYY-MM-DD.json`
-6. 更新 `.wolf/memory.md`
+1. 删除过期会话文件（保留最近 30 天）
+2. 删除冲突副本文件
+3. 精简 CLAUDE.md（如超阈值）
+4. 保存快照到 `.claude/skills/token-audit/snapshots/YYYY-MM-DD.json`
 
 ### Step 7: 保存快照
 

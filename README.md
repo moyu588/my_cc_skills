@@ -8,8 +8,6 @@
 - **收录社区精品** — 持续追踪 GitHub 上高质量、高 Star 的 Skill 类项目，覆盖导航索引、网络安全、通用技能三大板块
 - **快速参考** — 需要某个领域的 Skill 时，可快速查找和评估
 
-项目本身已集成 [OpenWolf](https://github.com/openwolf)（AI 辅助开发的 anatomy 追踪与记忆系统），`.wolf/anatomy.md` 自动维护项目文件索引，`.wolf/cerebrum.md` 记录开发偏好与约定。
-
 ---
 
 ## 🛠️ 个人 Skills（自建）
@@ -18,7 +16,7 @@
 
 | 项目                            | 简介                                                | 说明                                                                                     |
 | ----------------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| [token-audit](./token-audit/) | 通用 Token 浪费分析与自动修复，适用于 Claude Code + OpenWolf 项目栈 | 零依赖 Node.js 脚本，场景感知（LLM Wiki / 代码开发 / 通用），支持 quick / full / trend 三种分析模式，自然语言触发，MIT 开源 |
+| [token-audit](./token-audit/) | 通用 Token 浪费分析与自动修复，适用于 Claude Code 项目栈 | 零依赖 Node.js 脚本，场景感知（LLM Wiki / 代码开发 / 通用），支持 quick / full / trend 三种分析模式，自然语言触发，MIT 开源 |
 | [new-project-setup](./new-project-setup/) | 新项目标准装备初始化：家规模板 + hooks 安全防线 + 占位符填写 + 三项自检，支持从零/存量增量两分支 | 自包含 Claude Code 插件，命令安装：`claude plugin marketplace add moyu588/my_cc_skills` → `claude plugin install new-project-setup@my_cc_skills`，MIT 开源 |
 
 ---
