@@ -78,3 +78,10 @@ build/
 node_modules/
 .npm/
 *.log
+
+# =============================
+# new-project-setup 模板资产例外（家规模板必须提交）
+# =============================
+!new-project-setup/**/CLAUDE.md
+!new-project-setup/**/.claude/
+!new-project-setup/**/.claude/**

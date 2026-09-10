@@ -19,6 +19,7 @@
 | 项目                            | 简介                                                | 说明                                                                                     |
 | ----------------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | [token-audit](./token-audit/) | 通用 Token 浪费分析与自动修复，适用于 Claude Code + OpenWolf 项目栈 | 零依赖 Node.js 脚本，场景感知（LLM Wiki / 代码开发 / 通用），支持 quick / full / trend 三种分析模式，自然语言触发，MIT 开源 |
+| [new-project-setup](./new-project-setup/) | 新项目标准装备初始化：家规模板 + hooks 安全防线 + 占位符填写 + 三项自检，支持从零/存量增量两分支 | 自包含 Claude Code 插件，命令安装：`claude plugin marketplace add moyu588/my_cc_skills` → `claude plugin install new-project-setup@my_cc_skills`，MIT 开源 |
 
 ---
 

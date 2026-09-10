@@ -1,0 +1,32 @@
+{
+  "name": "my_cc_skills",
+  "owner": {
+    "name": "moyu588",
+    "url": "https://github.com/moyu588"
+  },
+  "metadata": {
+    "description": "moyu588 的个人 Claude Code Skills 仓库（自托管插件市场）"
+  },
+  "plugins": [
+    {
+      "name": "new-project-setup",
+      "source": "./new-project-setup/",
+      "description": "新项目标准装备初始化：拷贝家规模板（CLAUDE.md）与 hooks 安全防线（.claude/）、扫描代码库填占位符初稿、按需配置项目级 MCP、三项自检。支持从零初始化与存量项目增量补装两个分支。",
+      "version": "1.0.0",
+      "author": {
+        "name": "moyu588",
+        "url": "https://github.com/moyu588"
+      },
+      "repository": "https://github.com/moyu588/my_cc_skills",
+      "license": "MIT",
+      "keywords": [
+        "project-init",
+        "hooks",
+        "workflow",
+        "safety",
+        "claude-code"
+      ],
+      "category": "workflow"
+    }
+  ]
+}
